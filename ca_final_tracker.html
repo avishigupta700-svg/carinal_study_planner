@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CA Final Revision Tracker</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#0f172a;font-family:system-ui,sans-serif}
+  ::-webkit-scrollbar{width:4px}
+  ::-webkit-scrollbar-track{background:#1e293b}
+  ::-webkit-scrollbar-thumb{background:#334155;border-radius:2px}
+  textarea{font-family:inherit}
+  input::placeholder{color:#475569}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+const EXAM_DATE = new Date("2026-11-01");
+const getDays = () => Math.max(0, Math.ceil((EXAM_DATE - new Date()) / 86400000));
+const uid = () => Math.random().toString(36).slice(2, 10);
+
+const SUBJECT_DEFS = [
+  { id:"fr", name:"Financial Reporting", short:"FR", color:"#3B82F6",
+    chapters:[
+      "Conceptual Framework & Ind AS Overview","Ind AS 1 – Presentation of Financial Statements",
+      "Ind AS 2 – Inventories","Ind AS 7 – Statement of Cash Flows",
+      "Ind AS 8 – Accounting Policies, Changes & Errors","Ind AS 10 – Events after Reporting Period",
+      "Ind AS 12 – Income Taxes","Ind AS 16 – Property, Plant & Equipment",
+      "Ind AS 19 – Employee Benefits","Ind AS 20 – Government Grants",
+      "Ind AS 21 – Effects of Foreign Exchange Rates","Ind AS 23 – Borrowing Costs",
+      "Ind AS 24 – Related Party Disclosures","Ind AS 32 – Financial Instruments: Presentation",
+      "Ind AS 33 – Earnings Per Share","Ind AS 36 – Impairment of Assets",
+      "Ind AS 37 – Provisions & Contingent Liabilities","Ind AS 38 – Intangible Assets",
+      "Ind AS 40 – Investment Property","Ind AS 103 – Business Combinations",
+      "Ind AS 105 – Non-current Assets Held for Sale","Ind AS 108 – Operating Segments",
+      "Ind AS 109 – Financial Instruments","Ind AS 110 – Consolidated Financial Statements",
+      "Ind AS 111 – Joint Arrangements","Ind AS 113 – Fair Value Measurement",
+      "Ind AS 115 – Revenue from Contracts with Customers","Ind AS 116 – Leases",
+      "Ind AS 101 – First-time Adoption of Ind AS",
+    ]
+  },
+  { id:"afm", name:"Advanced Financial Management", short:"AFM", color:"#8B5CF6",
+    chapters:[
+      "Financial Policy & Corporate Strategy","Risk Management","Security Analysis",
+      "Security Valuation","Portfolio Management","Securitization","Mutual Funds",
+      "Derivatives – Futures & Forwards","Derivatives – Options",
+      "Interest Rate Risk Management","Foreign Exchange Exposure & Risk",
+      "International Financial Management","Corporate Valuation",
+      "Mergers, Acquisitions & Restructuring","Startup Finance & Venture Capital",
+    ]
+  },
+  { id:"aaa", name:"Advanced Auditing & Professional Ethics", short:"AAA", color:"#10B981",
+    chapters:[
+      "Quality Control & Engagement Standards","Audit Planning, Strategy & Risk Assessment",
+      "Internal Control Evaluation","Audit Evidence & Procedures",
+      "Sampling & Analytical Procedures","Completion, Review & Reporting",
+      "Audit of Group Financial Statements","Special Purpose Audits",
+      "Digital Auditing & Data Analytics","Forensic Auditing & Investigation",
+      "Professional Ethics & Code of Conduct","Key Auditing Standards & Pronouncements",
+    ]
+  },
+  { id:"dt", name:"Direct Tax Laws & International Taxation", short:"DT", color:"#F59E0B",
+    chapters:[
+      "Basic Concepts & Residence","Incomes Exempt from Tax","Income from Salaries",
+      "Income from House Property","Profits & Gains from Business or Profession",
+      "Capital Gains","Income from Other Sources","Clubbing & Set-off of Income",
+      "Deductions from Gross Total Income","Assessment of Various Entities","TDS & TCS",
+      "Advance Tax, Interest & Fees","Assessment Procedures & Appeals",
+      "Transfer Pricing","International Taxation & DTAA","Tax Planning & Anti-avoidance",
+    ]
+  },
+  { id:"idt", name:"Indirect Tax Laws", short:"IDT", color:"#EF4444",
+    chapters:[
+      "GST – Concept of Supply","GST – Charge & Composition Levy","GST – Exemptions",
+      "GST – Time of Supply","GST – Place of Supply","GST – Value of Supply",
+      "GST – Input Tax Credit","GST – Registration","GST – Tax Invoice, Accounts & Records",
+      "GST – Returns","GST – Payment of Tax","GST – Refund","GST – Assessment & Audit",
+      "GST – Demand & Recovery","GST – Appeals & Revision","GST – Advance Ruling",
+      "GST – Offences & Penalties","Customs – Basic Concepts & Levy",
+      "Customs – Valuation & Assessment","Customs – Import & Export Procedures",
+      "Customs – Drawback & Refund","Foreign Trade Policy – Overview",
+    ]
+  },
+  { id:"spom", name:"SPOM Set-A & Set-B", short:"SPOM", color:"#14B8A6",
+    sets:[
+      { id:"set_a", name:"SPOM Set-A — Law", timeWindow:"1–2 hrs", chapters:[
+        "Company Law – Share Capital & Debentures","Company Law – Meetings & Resolutions",
+        "Company Law – Directors & KMP","Company Law – Accounts, Audit & Dividends",
+        "Company Law – Compromises & Winding Up","SEBI Regulations",
+        "FEMA & Foreign Exchange Management","Insolvency & Bankruptcy Code (IBC)",
+        "Competition Act",
+      ]},
+      { id:"set_b", name:"SPOM Set-B — SCPM", timeWindow:"1–2 hrs", chapters:[
+        "Strategic Cost Management Overview","Cost Management Techniques",
+        "Decision Making & Marginal Costing","Budgeting, Forecasting & Beyond Budgeting",
+        "Standard Costing & Variance Analysis","Transfer Pricing",
+        "Performance Measurement Systems","Balanced Scorecard & KPIs",
+        "Quality Management – TQM, Six Sigma","Operations Management – Supply Chain",
+        "Project Management",
+      ]},
+    ]
+  },
+];
+
+// ── Storage (localStorage fallback since window.storage may not exist) ──
+const storage = {
+  get: async (key) => {
+    try {
+      if (window.storage) return await window.storage.get(key);
+      const v = localStorage.getItem(key);
+      return v ? { value: v } : null;
+    } catch { return null; }
+  },
+  set: async (key, val) => {
+    try {
+      if (window.storage) return await window.storage.set(key, val);
+      localStorage.setItem(key, val);
+    } catch {}
+  }
+};
+
+function buildInit() {
+  const chapterOrder = {}, chapterNames = {};
+  for (const s of SUBJECT_DEFS) {
+    if (s.sets) {
+      for (const set of s.sets) {
+        const key = `${s.id}_${set.id}`;
+        chapterOrder[key] = set.chapters.map(ch => { const id=uid(); chapterNames[id]=ch; return id; });
+      }
+    } else {
+      chapterOrder[s.id] = s.chapters.map(ch => { const id=uid(); chapterNames[id]=ch; return id; });
+    }
+  }
+  return { topicData:{}, chapterOrder, chapterNames };
+}
+
+const STATUS_SEQ = ["pending","inprogress","done"];
+const PRI_SEQ    = ["high","medium","low"];
+const SS = {
+  pending:    { c:"#64748b", bg:"#64748b15", l:"○ Pending" },
+  inprogress: { c:"#F59E0B", bg:"#F59E0B18", l:"⟳ In Progress" },
+  done:       { c:"#10B981", bg:"#10B98118", l:"✓ Done" },
+};
+const PS = {
+  high:   { c:"#EF4444", bg:"#EF444418", l:"🔴 High" },
+  medium: { c:"#F59E0B", bg:"#F59E0B18", l:"🟡 Med" },
+  low:    { c:"#3B82F6", bg:"#3B82F618", l:"🔵 Low" },
+};
+
+const { useState, useEffect, useCallback } = React;
+
+const ProgBar = ({ pct, color, h=6 }) => (
+  React.createElement('div', {style:{background:"#0f172a",borderRadius:99,height:h,overflow:"hidden"}},
+    React.createElement('div', {style:{height:"100%",width:`${pct}%`,background:color,transition:"width 0.4s",borderRadius:99}})
+  )
+);
+
+const Circle = ({ pct, color, size=56 }) => {
+  const r=(size-8)/2, c=2*Math.PI*r, d=(pct/100)*c;
+  return (
+    React.createElement('svg', {width:size,height:size},
+      React.createElement('circle',{cx:size/2,cy:size/2,r,fill:"none",stroke:"#1e293b",strokeWidth:5}),
+      React.createElement('circle',{cx:size/2,cy:size/2,r,fill:"none",stroke:color,strokeWidth:5,
+        strokeDasharray:`${d} ${c-d}`,strokeLinecap:"round",
+        transform:`rotate(-90 ${size/2} ${size/2})`,style:{transition:"stroke-dasharray 0.4s"}}),
+      React.createElement('text',{x:size/2,y:size/2+1,textAnchor:"middle",dominantBaseline:"middle",
+        fill:color,fontSize:size<50?9:11,fontWeight:700}, `${pct}%`)
+    )
+  );
+};
+
+function App() {
+  const [view, setView]               = useState("dashboard");
+  const [st, setSt]                   = useState(null);
+  const [filterStatus, setFilter]     = useState("all");
+  const [addInputs, setAddInputs]     = useState({});
+  const [noteModal, setNoteModal]     = useState(null);
+  const [noteText, setNoteText]       = useState("");
+  const [reorderMode, setReorderMode] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const r = await storage.get("cafinal_v3");
+        setSt(r ? JSON.parse(r.value) : buildInit());
+      } catch { setSt(buildInit()); }
+    })();
+  }, []);
+
+  const persist = useCallback(async s => {
+    try { await storage.set("cafinal_v3", JSON.stringify(s)); } catch {}
+  }, []);
+
+  const mut = useCallback(fn => {
+    setSt(prev => { const next = fn(prev); persist(next); return next; });
+  }, [persist]);
+
+  if (!st) return (
+    React.createElement('div', {style:{display:"flex",alignItems:"center",justifyContent:"center",
+      height:"100vh",background:"#0f172a",color:"#94a3b8",fontFamily:"system-ui"}},
+      "Loading your tracker…")
+  );
+
+  const getTopic = id => st.topicData[id] || { status:"pending", priority:"medium", note:"" };
+  const setTopic = (id, patch) => mut(p => ({...p, topicData:{...p.topicData,[id]:{...getTopic(id),...patch}}}));
+  const getOrder = sKey => st.chapterOrder[sKey] || [];
+
+  const addChapter = sKey => {
+    const name = (addInputs[sKey]||"").trim();
+    if (!name) return;
+    const id = uid();
+    mut(p => ({...p,
+      chapterOrder:{...p.chapterOrder,[sKey]:[...getOrder(sKey), id]},
+      chapterNames:{...p.chapterNames,[id]:name},
+    }));
+    setAddInputs(a => ({...a,[sKey]:""}));
+  };
+
+  const moveChapter = (sKey, idx, dir) => {
+    const order = [...getOrder(sKey)];
+    const ni = idx + dir;
+    if (ni < 0 || ni >= order.length) return;
+    [order[idx], order[ni]] = [order[ni], order[idx]];
+    mut(p => ({...p, chapterOrder:{...p.chapterOrder,[sKey]:order}}));
+  };
+
+  const deleteChapter = (sKey, id) => {
+    mut(p => ({...p, chapterOrder:{...p.chapterOrder,[sKey]:p.chapterOrder[sKey].filter(x=>x!==id)}}));
+  };
+
+  const getProgress = ids => {
+    const done = ids.filter(id => getTopic(id).status==="done").length;
+    const inp  = ids.filter(id => getTopic(id).status==="inprogress").length;
+    return { done, inp, total:ids.length, pct: ids.length ? Math.round(done/ids.length*100) : 0 };
+  };
+
+  const allIds = SUBJECT_DEFS.flatMap(s =>
+    s.sets ? s.sets.flatMap(set => getOrder(`${s.id}_${set.id}`)) : getOrder(s.id)
+  );
+  const overall = getProgress(allIds);
+  const subject = SUBJECT_DEFS.find(s => s.id === view);
+
+  // ── DASHBOARD ──
+  if (view === "dashboard") return (
+    <div style={{fontFamily:"system-ui,sans-serif",minHeight:"100vh",background:"#0f172a",color:"#f1f5f9"}}>
+      <div style={{background:"#1e293b",padding:"18px 20px 14px",borderBottom:"1px solid #334155"}}>
+        <div style={{fontSize:"1.2rem",fontWeight:800,letterSpacing:"-0.5px"}}>CA Final Revision Tracker</div>
+        <div style={{color:"#94a3b8",fontSize:"0.78rem",marginTop:2}}>November 2026 · ICAI New Scheme</div>
+      </div>
+
+      <div style={{padding:"16px 16px 32px"}}>
+        <div style={{background:"linear-gradient(135deg,#1e3a5f,#1e293b)",border:"1px solid #334155",
+          borderRadius:14,padding:"16px 18px",marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div>
+            <div style={{color:"#94a3b8",fontSize:"0.7rem",fontWeight:600,letterSpacing:1,marginBottom:4}}>DAYS TO EXAM</div>
+            <div style={{fontSize:"2.8rem",fontWeight:900,lineHeight:1,color:"#f1f5f9"}}>{getDays()}</div>
+            <div style={{color:"#64748b",fontSize:"0.7rem",marginTop:4}}>Nov 1, 2026</div>
+          </div>
+          <div style={{textAlign:"right"}}>
+            <Circle pct={overall.pct} color="#10B981" size={70}/>
+            <div style={{color:"#64748b",fontSize:"0.68rem",marginTop:4}}>{overall.done}/{overall.total} done</div>
+          </div>
+        </div>
+
+        <div style={{marginBottom:18}}>
+          <div style={{display:"flex",justifyContent:"space-between",fontSize:"0.7rem",color:"#64748b",marginBottom:5}}>
+            <span>Overall Progress</span>
+            <span>{overall.done} done · {overall.inp} in progress · {overall.total-overall.done-overall.inp} pending</span>
+          </div>
+          <ProgBar pct={overall.pct} color="linear-gradient(90deg,#10B981,#3B82F6)" h={8}/>
+        </div>
+
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+          {SUBJECT_DEFS.map(s => {
+            const ids = s.sets ? s.sets.flatMap(set=>getOrder(`${s.id}_${set.id}`)) : getOrder(s.id);
+            const p = getProgress(ids);
+            return (
+              <div key={s.id}
+                onClick={() => { setView(s.id); setReorderMode(false); setFilter("all"); }}
+                style={{background:"#1e293b",borderRadius:12,padding:14,cursor:"pointer",border:`1px solid ${s.color}30`}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+                  <span style={{background:s.color,color:"#fff",borderRadius:6,padding:"2px 8px",fontSize:"0.7rem",fontWeight:800}}>{s.short}</span>
+                  <Circle pct={p.pct} color={s.color} size={40}/>
+                </div>
+                <div style={{fontSize:"0.75rem",color:"#cbd5e1",lineHeight:1.35,marginBottom:8}}>{s.name}</div>
+                <ProgBar pct={p.pct} color={s.color} h={4}/>
+                <div style={{fontSize:"0.65rem",color:"#475569",marginTop:5}}>
+                  {p.done}✓ · {p.inp}⟳ · {p.total-p.done-p.inp}○
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+
+  // ── SUBJECT VIEW ──
+  const subIds = subject.sets
+    ? subject.sets.flatMap(set => getOrder(`${subject.id}_${set.id}`))
+    : getOrder(subject.id);
+  const sp = getProgress(subIds);
+
+  const renderRows = (sKey, ids) =>
+    ids.map((id, idx) => {
+      const state = getTopic(id);
+      if (!reorderMode && filterStatus !== "all" && state.status !== filterStatus) return null;
+      const s = SS[state.status], p = PS[state.priority||"medium"];
+      return (
+        <div key={id} style={{background:"#1e293b",borderRadius:10,padding:"10px 12px",marginBottom:7,
+          borderLeft:`3px solid ${reorderMode ? subject.color+"50" : s.c}`,display:"flex",gap:8,alignItems:"flex-start"}}>
+
+          {reorderMode && (
+            <div style={{display:"flex",flexDirection:"column",gap:3,flexShrink:0,paddingTop:2}}>
+              <button onClick={() => moveChapter(sKey,idx,-1)} disabled={idx===0}
+                style={{background:"#334155",color:idx===0?"#334155":"#94a3b8",border:"none",
+                  borderRadius:4,width:24,height:24,cursor:idx===0?"default":"pointer",
+                  fontSize:"0.65rem",display:"flex",alignItems:"center",justifyContent:"center"}}>▲</button>
+              <button onClick={() => moveChapter(sKey,idx,1)} disabled={idx===ids.length-1}
+                style={{background:"#334155",color:idx===ids.length-1?"#334155":"#94a3b8",border:"none",
+                  borderRadius:4,width:24,height:24,cursor:idx===ids.length-1?"default":"pointer",
+                  fontSize:"0.65rem",display:"flex",alignItems:"center",justifyContent:"center"}}>▼</button>
+            </div>
+          )}
+
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:"0.82rem",lineHeight:1.4,
+              color:state.status==="done"?"#475569":"#e2e8f0",
+              textDecoration:state.status==="done"?"line-through":"none",
+              marginBottom:reorderMode?0:8}}>
+              {st.chapterNames[id]||"(Untitled)"}
+            </div>
+            {!reorderMode && (
+              <div style={{display:"flex",gap:5,flexWrap:"wrap",alignItems:"center"}}>
+                <button onClick={() => setTopic(id,{status:STATUS_SEQ[(STATUS_SEQ.indexOf(state.status)+1)%3]})}
+                  style={{background:s.bg,color:s.c,border:"none",borderRadius:6,padding:"3px 9px",fontSize:"0.67rem",cursor:"pointer",fontWeight:600}}>{s.l}</button>
+                <button onClick={() => setTopic(id,{priority:PRI_SEQ[(PRI_SEQ.indexOf(state.priority||"medium")+1)%3]})}
+                  style={{background:p.bg,color:p.c,border:"none",borderRadius:6,padding:"3px 8px",fontSize:"0.67rem",cursor:"pointer",fontWeight:600}}>{p.l}</button>
+                <button onClick={() => {setNoteModal(id);setNoteText(state.note||"");}}
+                  style={{background:state.note?`${subject.color}20`:"#33415522",
+                    color:state.note?subject.color:"#64748b",border:"none",borderRadius:6,
+                    padding:"3px 8px",fontSize:"0.67rem",cursor:"pointer"}}>
+                  {state.note?"📝 Note":"+ Note"}</button>
+
+                {/* R1 / R2 / R3 revision round toggles */}
+                <div style={{display:"flex",gap:4,marginLeft:2}}>
+                  {["r1","r2","r3"].map((rk,ri) => {
+                    const done = !!state[rk];
+                    const labels = ["R1","R2","R3"];
+                    const activeColors = ["#6366f1","#ec4899","#f97316"];
+                    const ac = activeColors[ri];
+                    return (
+                      <button key={rk}
+                        onClick={() => setTopic(id,{[rk]:!done})}
+                        title={`Revision ${ri+1} ${done?"done":"pending"}`}
+                        style={{
+                          background: done ? ac : "#0f172a",
+                          color: done ? "#fff" : "#475569",
+                          border: `1.5px solid ${done ? ac : "#334155"}`,
+                          borderRadius:6,
+                          padding:"2px 7px",
+                          fontSize:"0.65rem",
+                          fontWeight:700,
+                          cursor:"pointer",
+                          letterSpacing:"0.03em",
+                          transition:"all 0.15s",
+                        }}>
+                        {done ? "✓ " : ""}{labels[ri]}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            {!reorderMode && state.note && (
+              <div style={{marginTop:6,background:"#0f172a",borderRadius:6,padding:"5px 9px",
+                fontSize:"0.72rem",color:"#94a3b8",lineHeight:1.4}}>{state.note}</div>
+            )}
+          </div>
+
+          {reorderMode && (
+            <button onClick={() => deleteChapter(sKey,id)}
+              style={{background:"#EF444418",color:"#EF4444",border:"none",borderRadius:6,
+                padding:"4px 8px",fontSize:"0.75rem",cursor:"pointer",flexShrink:0,alignSelf:"center"}}>✕</button>
+          )}
+        </div>
+      );
+    });
+
+  const renderAddRow = sKey => (
+    <div style={{display:"flex",gap:8,marginTop:4,marginBottom:8}}>
+      <input
+        value={addInputs[sKey]||""}
+        onChange={e => setAddInputs(a=>({...a,[sKey]:e.target.value}))}
+        onKeyDown={e => e.key==="Enter" && addChapter(sKey)}
+        placeholder="Add a topic or chapter…"
+        style={{flex:1,background:"#1e293b",border:`1px dashed ${subject.color}55`,
+          borderRadius:8,padding:"8px 12px",color:"#f1f5f9",fontSize:"0.8rem",outline:"none"}}
+      />
+      <button onClick={() => addChapter(sKey)}
+        style={{background:subject.color,color:"#fff",border:"none",borderRadius:8,
+          padding:"8px 14px",fontSize:"0.8rem",cursor:"pointer",fontWeight:700,whiteSpace:"nowrap"}}>+ Add</button>
+    </div>
+  );
+
+  return (
+    <div style={{fontFamily:"system-ui,sans-serif",minHeight:"100vh",background:"#0f172a",color:"#f1f5f9"}}>
+
+      <div style={{background:"#1e293b",padding:"14px 16px",borderBottom:"1px solid #334155",position:"sticky",top:0,zIndex:10}}>
+        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+          <button onClick={() => { setView("dashboard"); setNoteModal(null); }}
+            style={{background:"#334155",border:"none",color:"#94a3b8",cursor:"pointer",borderRadius:8,padding:"4px 10px",fontSize:"0.78rem"}}>← Back</button>
+          <span style={{background:subject.color,color:"#fff",borderRadius:6,padding:"2px 8px",fontSize:"0.7rem",fontWeight:800}}>{subject.short}</span>
+          <button
+            onClick={() => { setReorderMode(r=>!r); setFilter("all"); }}
+            style={{marginLeft:"auto",background:reorderMode?subject.color:"#334155",
+              color:reorderMode?"#fff":"#94a3b8",border:"none",borderRadius:8,
+              padding:"5px 13px",fontSize:"0.75rem",cursor:"pointer",fontWeight:600}}>
+            {reorderMode ? "✓ Done" : "⇅ Reorder"}
+          </button>
+        </div>
+        <div style={{fontSize:"0.88rem",fontWeight:700,marginBottom:6}}>{subject.name}</div>
+        <ProgBar pct={sp.pct} color={subject.color} h={6}/>
+        <div style={{display:"flex",justifyContent:"space-between",fontSize:"0.68rem",color:"#64748b",marginTop:4}}>
+          <span>{sp.done}/{sp.total} done</span><span>{sp.pct}% complete</span>
+        </div>
+      </div>
+
+      {!reorderMode && (
+        <div style={{display:"flex",gap:7,padding:"11px 16px 4px",overflowX:"auto"}}>
+          {[["all","All"],["pending","Pending"],["inprogress","In Progress"],["done","Done"]].map(([f,l]) => (
+            <button key={f} onClick={() => setFilter(f)}
+              style={{background:filterStatus===f?subject.color:"#1e293b",color:filterStatus===f?"#fff":"#94a3b8",
+                border:filterStatus===f?"none":"1px solid #334155",borderRadius:20,padding:"4px 13px",
+                fontSize:"0.7rem",cursor:"pointer",whiteSpace:"nowrap",fontWeight:filterStatus===f?700:400}}>{l}</button>
+          ))}
+        </div>
+      )}
+
+      {reorderMode && (
+        <div style={{background:"#1e3a5f",padding:"8px 16px",fontSize:"0.73rem",color:"#93c5fd",display:"flex",gap:6,alignItems:"center"}}>
+          ▲▼ drag order · ✕ remove · type below to add new topics
+        </div>
+      )}
+
+      <div style={{padding:"12px 16px 40px"}}>
+        {subject.sets
+          ? subject.sets.map(set => {
+              const sKey = `${subject.id}_${set.id}`;
+              return (
+                <div key={set.id} style={{marginBottom:24}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                    <div style={{fontSize:"0.88rem",fontWeight:700,color:subject.color}}>{set.name}</div>
+                    <span style={{background:`${subject.color}18`,color:subject.color,border:`1px solid ${subject.color}40`,
+                      borderRadius:20,padding:"2px 10px",fontSize:"0.67rem",fontWeight:600}}>⏱ {set.timeWindow} window</span>
+                  </div>
+                  {renderRows(sKey, getOrder(sKey))}
+                  {renderAddRow(sKey)}
+                </div>
+              );
+            })
+          : <>
+              {renderRows(subject.id, getOrder(subject.id))}
+              {renderAddRow(subject.id)}
+            </>
+        }
+      </div>
+
+      {noteModal && (
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.75)",display:"flex",
+          alignItems:"center",justifyContent:"center",padding:20,zIndex:50}}>
+          <div style={{background:"#1e293b",borderRadius:14,padding:20,width:"100%",maxWidth:400,border:"1px solid #334155"}}>
+            <div style={{fontWeight:700,marginBottom:12,fontSize:"0.9rem"}}>📝 Revision Notes</div>
+            <div style={{fontSize:"0.78rem",color:"#64748b",marginBottom:8}}>
+              {st.chapterNames[noteModal]}
+            </div>
+            <textarea value={noteText} onChange={e=>setNoteText(e.target.value)}
+              placeholder="Notes, mnemonics, key points, case laws…"
+              style={{width:"100%",minHeight:130,background:"#0f172a",border:"1px solid #334155",
+                borderRadius:8,padding:10,color:"#f1f5f9",fontSize:"0.83rem",
+                resize:"vertical",boxSizing:"border-box",outline:"none"}}/>
+            <div style={{display:"flex",gap:8,marginTop:12}}>
+              <button onClick={() => { setTopic(noteModal,{note:noteText}); setNoteModal(null); }}
+                style={{flex:1,background:subject.color,color:"#fff",border:"none",borderRadius:8,
+                  padding:10,cursor:"pointer",fontWeight:700,fontSize:"0.85rem"}}>Save Note</button>
+              <button onClick={() => setNoteModal(null)}
+                style={{flex:1,background:"#334155",color:"#f1f5f9",border:"none",borderRadius:8,
+                  padding:10,cursor:"pointer",fontSize:"0.85rem"}}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
+</script>
+</body>
+</html>
